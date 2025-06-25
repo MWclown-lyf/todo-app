@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
 	"os"
 )
 
@@ -24,8 +26,12 @@ func loadTasks() ([]Task, error) {
 	defer file.Close()
 
 	var tasks []Task
-	if err := json.NewDecoder(file).Decode(&tasks); err != nil {
-		return nil, err
+	decErr := json.NewDecoder(file).Decode(&tasks)
+	if decErr != nil {
+		if decErr == io.EOF {
+			return []Task{}, nil
+		}
+		return nil, decErr
 	}
 	return tasks, nil
 }
@@ -50,11 +56,41 @@ func nextID(tasks []Task) int {
 }
 
 func AddTask(title string) {
-	panic("unimplemented")
+	tasks, err := loadTasks()
+	if err != nil {
+		fmt.Println("load fail:", err)
+		return
+	}
+	task := Task{
+		ID:    nextID(tasks),
+		Title: title,
+		Done:  false,
+	}
+	tasks = append(tasks, task)
+	if err := saveTasks(tasks); err != nil {
+		fmt.Println("save fail:", err)
+		return
+	}
+	fmt.Println("add compelete:", title)
 }
 
 func ListTasks() {
-	panic("unimplemented")
+	tasks, err := loadTasks()
+	if err != nil {
+		fmt.Println("load fail:", err)
+		return
+	}
+	if len(tasks) == 0 {
+		fmt.Println("no mission")
+		return
+	}
+	for _, task := range tasks {
+		status := " "
+		if task.Done {
+			status = "✓"
+		}
+		fmt.Printf("%d. [%s] %s\n", task.ID, status, task.Title)
+	}
 }
 
 func CompleteTask(id int) {
