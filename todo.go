@@ -58,9 +58,51 @@ func ListTasks() {
 }
 
 func CompleteTask(id int) {
-	panic("unimplemented")
+	tasks, err := loadTasks()
+	if err != nil {
+		panic(err)
+	}
+
+	found := false
+	for i := range tasks {
+		if tasks[i].ID == id {
+			tasks[i].Done = true
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		panic("task not found")
+	}
+
+	if err := saveTasks(tasks); err != nil {
+		panic(err)
+	}
 }
 
 func DeleteTask(id int) {
-	panic("unimplemented")
+	tasks, err := loadTasks()
+	if err != nil {
+		panic(err)
+	}
+
+	newTasks := []Task{}
+	found := false
+	for _, t := range tasks {
+		if t.ID == id {
+			found = true
+			continue
+		}
+		newTasks = append(newTasks, t)
+	}
+
+	if !found {
+		panic("task not found")
+	}
+
+	if err := saveTasks(newTasks); err != nil {
+		panic(err)
+	}
 }
+
